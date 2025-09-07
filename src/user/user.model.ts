@@ -33,4 +33,10 @@ export class User extends Model<User> {
     allowNull: true,
   })
   declare role: 'admin' | 'manager' | 'developer';
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+  })
+  declare currentHashedRefreshToken?: string;
 }

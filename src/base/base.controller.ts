@@ -10,9 +10,9 @@ import {
 } from '@nestjs/common';
 import { BaseService } from './base.service';
 import { Model } from 'sequelize-typescript';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/roles.guard';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/user.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 export class BaseController<T extends Model> {
   constructor(private readonly baseService: BaseService<T>) {}

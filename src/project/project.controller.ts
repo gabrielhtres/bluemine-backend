@@ -2,10 +2,9 @@ import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { BaseController } from '../base/base.controller';
 import { Project } from './project.model';
 import { ProjectService } from './project.service';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/roles.guard';
-import { Req } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/user.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @Controller('project')
 export class ProjectController extends BaseController<Project> {

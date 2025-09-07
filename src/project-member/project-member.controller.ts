@@ -1,9 +1,9 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ProjectMember } from './project-member.model';
 import { ProjectMemberService } from './project-member.service';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/roles.guard';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { SyncProjectMemberDto } from './dto/sync-project-member.dto';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @Controller('project-member')
 export class ProjectMemberController {
