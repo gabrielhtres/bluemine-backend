@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { BaseController } from '../base/base.controller';
 import { Project } from './project.model';
 import { ProjectService } from './project.service';
@@ -23,5 +23,11 @@ export class ProjectController extends BaseController<Project> {
       managerId: +managerId,
     };
     return this.projectService.create(createData);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('my-projects')
+  findMyProjects(@CurrentUser('id') userId: string): Promise<Project[]> {
+    return this.projectService.findByUserId(+userId);
   }
 }

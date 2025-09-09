@@ -8,4 +8,8 @@ export class TaskService extends BaseService<Task> {
   constructor(@InjectModel(Task) private readonly taskModel: typeof Task) {
     super(taskModel);
   }
+
+  async findByAssigneeId(assigneeId: number): Promise<Task[]> {
+    return this.taskModel.findAll({ where: { assigneeId } });
+  }
 }

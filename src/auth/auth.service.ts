@@ -79,7 +79,11 @@ export class AuthService {
 
     const tokens = await this.getTokens(user.id, user.email, user.role);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
-    return tokens;
+
+    return {
+      ...tokens,
+      permissions: user.role ? RolePermissions[user.role] : [],
+    };
   }
 
   private async updateRefreshToken(userId: number, refreshToken: string) {
