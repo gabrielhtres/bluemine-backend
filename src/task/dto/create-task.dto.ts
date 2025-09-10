@@ -10,6 +10,8 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { ExistsInDatabase } from 'src/common/validators/exists-in-database.validator';
+import { Project, User } from 'src/models';
 
 export enum TaskStatus {
   TODO = 'todo',
@@ -88,6 +90,10 @@ export class CreateTaskDto {
   @IsNumber({}, { message: 'O ID do projeto deve ser um número.' })
   @IsPositive({ message: 'O ID do projeto deve ser um número positivo.' })
   @IsNotEmpty({ message: 'O ID do projeto é obrigatório.' })
+  @ExistsInDatabase(
+    { model: Project },
+    { message: 'O projeto especificado não existe.' },
+  )
   projectId: number;
 
   @ApiProperty({
@@ -97,5 +103,9 @@ export class CreateTaskDto {
   @IsNumber({}, { message: 'O ID do responsável deve ser um número.' })
   @IsPositive({ message: 'O ID do responsável deve ser um número positivo.' })
   @IsNotEmpty({ message: 'É obrigatório atribuir a tarefa a um responsável.' })
+  @ExistsInDatabase(
+    { model: User },
+    { message: 'O usuário responsável especificado não existe.' },
+  )
   assigneeId: number;
 }

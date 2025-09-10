@@ -10,6 +10,8 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { ExistsInDatabase } from 'src/common/validators/exists-in-database.validator';
+import { User } from 'src/models';
 
 export enum ProjectStatus {
   PLANNED = 'planned',
@@ -78,5 +80,9 @@ export class CreateProjectDto {
   @IsNumber({}, { message: 'O ID do gerente deve ser um número.' })
   @IsPositive({ message: 'O ID do gerente deve ser um número positivo.' })
   @IsNotEmpty({ message: 'O ID do gerente é obrigatório.' })
+  @ExistsInDatabase(
+    { model: User },
+    { message: 'O gerente especificado não existe.' },
+  )
   managerId: number;
 }

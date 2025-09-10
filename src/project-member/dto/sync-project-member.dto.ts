@@ -7,6 +7,8 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { ExistsInDatabase } from 'src/common/validators/exists-in-database.validator';
+import { Project, User } from 'src/models';
 
 class ProjectAssignmentDto {
   @ApiProperty({
@@ -15,6 +17,10 @@ class ProjectAssignmentDto {
   })
   @IsNotEmpty()
   @IsNumber()
+  @ExistsInDatabase(
+    { model: User },
+    { message: 'O developer com o ID fornecido não existe.' },
+  )
   developerId: number;
 
   @ApiProperty({
@@ -36,6 +42,10 @@ export class SyncProjectMemberDto {
   })
   @IsNotEmpty()
   @IsNumber()
+  @ExistsInDatabase(
+    { model: Project },
+    { message: 'O projeto especificado não existe.' },
+  )
   projectId: number;
 
   @ApiProperty({
