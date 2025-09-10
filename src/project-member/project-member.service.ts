@@ -29,7 +29,7 @@ export class ProjectMemberService {
 
       const membersToCreate = assignments.map((assignment) => ({
         projectId,
-        developerId: assignment.developerId,
+        userId: assignment.developerId,
         role: assignment.role,
       }));
 

@@ -37,6 +37,7 @@ export class AuthService {
     return {
       ...tokens,
       permissions: user.role ? RolePermissions[user.role] : [],
+      user: user.name,
     };
   }
 
@@ -83,6 +84,7 @@ export class AuthService {
     return {
       ...tokens,
       permissions: user.role ? RolePermissions[user.role] : [],
+      user: user.name,
     };
   }
 

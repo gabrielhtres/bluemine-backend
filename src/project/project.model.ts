@@ -5,8 +5,10 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
+  BelongsToMany,
 } from 'sequelize-typescript';
 import { User } from '../user/user.model';
+import { ProjectMember } from 'src/models';
 
 @Table({ tableName: 'projects' })
 export class Project extends Model<Project> {
@@ -57,4 +59,7 @@ export class Project extends Model<Project> {
 
   @BelongsTo(() => User)
   declare manager: User;
+
+  @BelongsToMany(() => User, () => ProjectMember)
+  declare developers: Array<User & { ProjectMember: ProjectMember }>;
 }

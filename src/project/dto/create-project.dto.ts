@@ -1,5 +1,3 @@
-// src/project/dto/create-project.dto.ts
-
 import {
   IsString,
   IsNotEmpty,

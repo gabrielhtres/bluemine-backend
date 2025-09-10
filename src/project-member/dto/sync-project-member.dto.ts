@@ -1,5 +1,3 @@
-// src/project-member/dto/sync-project-members.dto.ts
-
 import {
   IsEnum,
   IsNotEmpty,

@@ -2,9 +2,6 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    // A ordem de criação é importante por causa das chaves estrangeiras (foreign keys)
-
-    // 1. Criar a tabela 'users'
     await queryInterface.createTable('users', {
       id: {
         type: Sequelize.INTEGER,
@@ -41,7 +38,6 @@ module.exports = {
       },
     });
 
-    // 2. Criar a tabela 'projects' (depende de 'users')
     await queryInterface.createTable('projects', {
       id: {
         type: Sequelize.INTEGER,
@@ -74,7 +70,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'users', // Nome da tabela referenciada
+          model: 'users',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -92,7 +88,6 @@ module.exports = {
       },
     });
 
-    // 3. Criar a tabela 'tasks' (depende de 'users' e 'projects')
     await queryInterface.createTable('tasks', {
       id: {
         type: Sequelize.INTEGER,
@@ -154,7 +149,6 @@ module.exports = {
       },
     });
 
-    // 4. Criar a tabela 'project_members' (depende de 'users' e 'projects')
     await queryInterface.createTable('project_members', {
       id: {
         type: Sequelize.INTEGER,
@@ -201,8 +195,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    // A ordem de exclusão é a inversa da criação para evitar erros de constraint
-
     await queryInterface.dropTable('project_members');
     await queryInterface.dropTable('tasks');
     await queryInterface.dropTable('projects');

@@ -1,5 +1,4 @@
 import { PassportStrategy } from '@nestjs/passport';
-// ✨ 1. Importe 'StrategyOptionsWithRequest' para tipagem explícita
 import { ExtractJwt, Strategy, StrategyOptionsWithRequest } from 'passport-jwt';
 import type { Request } from 'express';
 import { Injectable } from '@nestjs/common';

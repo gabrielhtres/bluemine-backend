@@ -1,4 +1,11 @@
-import { Table, Column, Model, DataType } from 'sequelize-typescript';
+import {
+  Table,
+  Column,
+  Model,
+  DataType,
+  BelongsToMany,
+} from 'sequelize-typescript';
+import { Project, ProjectMember } from 'src/models';
 
 @Table({ tableName: 'users' })
 export class User extends Model<User> {
@@ -39,4 +46,7 @@ export class User extends Model<User> {
     allowNull: true,
   })
   declare currentHashedRefreshToken?: string;
+
+  @BelongsToMany(() => Project, () => ProjectMember)
+  declare projects: Array<Project & { ProjectMember: ProjectMember }>;
 }

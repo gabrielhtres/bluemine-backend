@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { BaseService } from '../base/base.service';
 import { User } from './user.model';
 import * as bcrypt from 'bcrypt';
-import { CreateUserDto } from './dto/create-user.dto'; // Supondo que você tenha um DTO
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UserService extends BaseService<User> {
