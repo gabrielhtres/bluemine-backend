@@ -57,7 +57,7 @@ export class Project extends Model<Project> {
   })
   declare managerId: number;
 
-  @BelongsTo(() => User)
+  @BelongsTo(() => User, 'managerId')
   declare manager: User;
 
   @BelongsToMany(() => User, () => ProjectMember)

@@ -25,7 +25,7 @@ export class ProjectMember extends Model<ProjectMember> {
   })
   declare projectId: number;
 
-  @BelongsTo(() => Project)
+  @BelongsTo(() => Project, 'projectId')
   declare project: Project;
 
   @ForeignKey(() => User)
@@ -35,7 +35,7 @@ export class ProjectMember extends Model<ProjectMember> {
   })
   declare userId: number;
 
-  @BelongsTo(() => User)
+  @BelongsTo(() => User, 'userId')
   declare user: User;
 
   @Column({

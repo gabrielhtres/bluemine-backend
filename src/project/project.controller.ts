@@ -13,7 +13,6 @@ import { Project } from './project.model';
 import { ProjectService } from './project.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/user.decorator';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
 import {
   ApiTags,
   ApiOperation,
@@ -23,16 +22,17 @@ import {
 } from '@nestjs/swagger';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @ApiBearerAuth()
-@ApiTags('Projects') // A tag específica para agrupar as rotas de Projeto
+@ApiTags('Projects')
 @Controller('project')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ProjectController extends BaseController<Project> {
   constructor(private readonly projectService: ProjectService) {
     super(projectService);
   }
 
-  // O método create já era específico, então mantemos a documentação dele
   @Post()
   @ApiOperation({ summary: 'Cria um novo projeto' })
   @ApiResponse({
@@ -52,21 +52,30 @@ export class ProjectController extends BaseController<Project> {
     return this.projectService.create(createData);
   }
 
-  // --- AQUI COMEÇA A MÁGICA DA SOBRESCRITA ---
-
   @Get()
-  @ApiOperation({ summary: 'Lista todos os projetos' }) // Descrição específica
+  @ApiOperation({ summary: 'Lista todos os projetos' })
   @ApiResponse({
     status: 200,
     description: 'Lista de projetos retornada com sucesso.',
     type: [Project],
-  }) // Tipo específico
+  })
   findAll(): Promise<Project[]> {
-    return super.findAll(); // A lógica continua sendo a do BaseController
+    return super.findAll();
+  }
+
+  @Get('my-projects')
+  @ApiOperation({ summary: 'Lista os projetos do usuário logado' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de projetos retornada com sucesso.',
+    type: [Project],
+  })
+  findMyProjects(@CurrentUser('id') userId: string): Promise<Project[]> {
+    return this.projectService.findByUserId(+userId);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Busca um projeto pelo ID' }) // Descrição específica
+  @ApiOperation({ summary: 'Busca um projeto pelo ID' })
   @ApiParam({ name: 'id', description: 'ID do projeto' })
   @ApiResponse({
     status: 200,
@@ -101,16 +110,5 @@ export class ProjectController extends BaseController<Project> {
   @ApiResponse({ status: 404, description: 'Projeto não encontrado.' })
   remove(@Param('id') id: string): Promise<void> {
     return super.remove(id);
-  }
-
-  @Get('my-projects')
-  @ApiOperation({ summary: 'Lista os projetos do usuário logado' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de projetos retornada com sucesso.',
-    type: [Project],
-  })
-  findMyProjects(@CurrentUser('id') userId: string): Promise<Project[]> {
-    return this.projectService.findByUserId(+userId);
   }
 }

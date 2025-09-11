@@ -4,6 +4,7 @@ import {
   Model,
   DataType,
   BelongsToMany,
+  HasMany,
 } from 'sequelize-typescript';
 import { Project, ProjectMember } from 'src/models';
 
@@ -49,4 +50,7 @@ export class User extends Model<User> {
 
   @BelongsToMany(() => Project, () => ProjectMember)
   declare projects: Array<Project & { ProjectMember: ProjectMember }>;
+
+  @HasMany(() => Project, 'managerId')
+  declare managedProjects: Project[];
 }

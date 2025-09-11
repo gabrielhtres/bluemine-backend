@@ -1,5 +1,5 @@
 export const RolePermissions = {
-  admin: ['users', 'dashboard'],
+  admin: ['users'],
   manager: ['projects', 'tasks', 'dashboard'],
   developer: ['toggle_tasks', 'dashboard'],
 } as const;

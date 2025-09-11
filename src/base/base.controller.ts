@@ -11,7 +11,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 
-@ApiBearerAuth() // Indica que todos os endpoints que herdam daqui necessitam de autenticação
+@ApiBearerAuth()
 export class BaseController<T extends Model> {
   constructor(private readonly baseService: BaseService<T>) {}
 

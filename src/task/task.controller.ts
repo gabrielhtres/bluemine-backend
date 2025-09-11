@@ -30,13 +30,14 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 @ApiBearerAuth()
 @ApiTags('Tasks')
 @Controller('task')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class TaskController extends BaseController<Task> {
   constructor(private readonly taskService: TaskService) {
     super(taskService);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('my-tasks')
+  @Roles('manager', 'developer')
   @ApiOperation({
     summary: 'Lista todas as tarefas atribuídas ao usuário logado',
   })
@@ -49,9 +50,8 @@ export class TaskController extends BaseController<Task> {
     return this.taskService.findByAssigneeId(+userId);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('developer')
   @Patch('toggle-status/:id')
+  @Roles('developer')
   @ApiOperation({ summary: 'Atualiza o status de uma tarefa' })
   @ApiParam({ name: 'id', description: 'ID da tarefa' })
   @ApiResponse({
@@ -67,6 +67,8 @@ export class TaskController extends BaseController<Task> {
     return this.taskService.updateStatus(+id, updateTaskStatusDto.status);
   }
 
+  @Post()
+  @Roles('manager')
   @ApiOperation({ summary: 'Cria uma nova tarefa' })
   @ApiResponse({
     status: 201,
@@ -77,6 +79,8 @@ export class TaskController extends BaseController<Task> {
     return super.create(data as any);
   }
 
+  @Get()
+  @Roles('manager', 'developer')
   @ApiOperation({ summary: 'Lista todas as tarefas' })
   @ApiResponse({
     status: 200,
@@ -87,6 +91,8 @@ export class TaskController extends BaseController<Task> {
     return super.findAll();
   }
 
+  @Get(':id')
+  @Roles('manager')
   @ApiOperation({ summary: 'Busca uma tarefa pelo ID' })
   @ApiParam({ name: 'id', description: 'ID da tarefa' })
   @ApiResponse({
@@ -99,6 +105,8 @@ export class TaskController extends BaseController<Task> {
     return super.findOne(id);
   }
 
+  @Put(':id')
+  @Roles('manager')
   @ApiOperation({ summary: 'Atualiza uma tarefa existente' })
   @ApiParam({ name: 'id', description: 'ID da tarefa' })
   @ApiResponse({
@@ -111,6 +119,8 @@ export class TaskController extends BaseController<Task> {
     return super.update(id, data);
   }
 
+  @Delete(':id')
+  @Roles('manager')
   @ApiOperation({ summary: 'Remove uma tarefa' })
   @ApiParam({ name: 'id', description: 'ID da tarefa' })
   @ApiResponse({ status: 200, description: 'Tarefa removida com sucesso.' })

@@ -10,15 +10,17 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 
 @ApiBearerAuth()
 @ApiTags('Project Members')
 @Controller('project-member')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ProjectMemberController {
   constructor(private readonly projectMemberService: ProjectMemberService) {}
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Post()
+  @Roles('manager')
   @ApiOperation({
     summary: 'Sincroniza os membros de um projeto',
     description:
