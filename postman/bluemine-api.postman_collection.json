@@ -1,0 +1,522 @@
+{
+	"info": {
+		"_postman_id": "c5e390a1-bac0-4b43-bec1-08b13295b7c5",
+		"name": "bluemine-api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "48222278",
+		"_collection_link": "https://gabrielhtres-8576658.postman.co/workspace/Gabriel-Henrique's-Workspace~ab5a1087-808b-4304-836b-93cb5de0ffe5/collection/48222278-c5e390a1-bac0-4b43-bec1-08b13295b7c5?action=share&source=collection_link&creator=48222278"
+	},
+	"item": [
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "/login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {\r",
+									"    const responseBody = pm.response.json();\r",
+									"\r",
+									"    const accessToken = responseBody.accessToken;\r",
+									"\r",
+									"    if (accessToken) {\r",
+									"        pm.collectionVariables.set(\"accessToken\", accessToken);\r",
+									"        console.log(\"Variável 'accessToken' da collection foi atualizada.\");\r",
+									"    } else {\r",
+									"        console.error(\"Não foi encontrado um 'accessToken' na resposta do login.\");\r",
+									"    }\r",
+									"} else {\r",
+									"    console.error(\"A requisição de login falhou. Status code: \" + pm.response.code);\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"g@g.com\",\r\n    \"password\": \"teste\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api-url}}/auth/login",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"g@g.com\",\r\n    \"name\": \"Gerente 1\",\r\n    \"password\": \"teste\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api-url}}/auth/register",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{api-url}}/auth/logout",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "user",
+			"item": [
+				{
+					"name": "/user",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api-url}}/user",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/user/:id",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"role\": \"manager\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api-url}}/user/1",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"user",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/user",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{api-url}}/user/1",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"user",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/user/by-role/:role",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api-url}}/user/by-role/developer",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"user",
+								"by-role",
+								"developer"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "task",
+			"item": [
+				{
+					"name": "/task",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api-url}}/task",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"task"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/task",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"assigneeId\": 7,\r\n    \"description\": \"Descrição da Tarefa 1\",\r\n    \"dueDate\": \"2025-09-17\",\r\n    \"priority\": \"high\",\r\n    \"projectId\": 1,\r\n    \"status\": \"done\",\r\n    \"title\": \"Tarefa 1\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api-url}}/task",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"task"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/task/:id",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"assigneeId\": \"7\",\r\n    \"description\": \"Descrição da Tarefa 1\",\r\n    \"dueDate\": \"2025-09-17\",\r\n    \"priority\": \"high\",\r\n    \"projectId\": \"1\",\r\n    \"status\": \"done\",\r\n    \"title\": \"Tarefa 1\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api-url}}/task/1",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"task",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/task",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{api-url}}/task/1",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"task",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/task/my-tasks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api-url}}/task/my-tasks",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"task",
+								"my-tasks"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/task/toggle-status/:id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"status\": \"in_progress\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api-url}}/task/toggle-status/1",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"task",
+								"toggle-status",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "project",
+			"item": [
+				{
+					"name": "/project",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api-url}}/project",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"project"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/project",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"managerId\": 7,\r\n    \"description\": \"Descrição do Projeto 2\",\r\n    \"endDate\": \"2025-09-26\",\r\n    \"name\": \"Projeto 2\",\r\n    \"startDate\": \"2025-09-19\",\r\n    \"status\": \"planned\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api-url}}/project",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"project"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/project/:id",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"description\": \"Descrição do Projeto 2\",\r\n    \"endDate\": \"2025-09-26\",\r\n    \"name\": \"Projeto 2\",\r\n    \"startDate\": \"2025-09-19\",\r\n    \"status\": \"planned\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api-url}}/project/1",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"project",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/project",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{api-url}}/project/1",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"project",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/project/my-projects",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api-url}}/project/my-projects",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"project",
+								"my-projects"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "project-member",
+			"item": [
+				{
+					"name": "/project-member",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"projectId\": 3,\r\n    \"assignments\": [\r\n        {\r\n            \"developerId\": 8,\r\n            \"role\": \"contributor\"\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api-url}}/project-member",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"project-member"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
