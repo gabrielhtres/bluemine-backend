@@ -112,16 +112,3 @@ Blumine API é o backend para um sistema de gestão de projetos, desenvolvido pa
 
 Após iniciar a aplicação, a documentação da API gerada pelo Swagger estará disponível em:
 [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
-
-### Executando os Testes
-
-- **Testes Unitários:**
-
-  ```bash
-  yarn run test
-  ```
-
-- **Testes com Coverage:**
-  ```bash
-  yarn run test:cov
-  ```
