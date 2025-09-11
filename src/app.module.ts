@@ -9,10 +9,10 @@ import { ProjectMemberModule } from './project-member/project-member.module';
 import { Project } from './project/project.model';
 import { Task } from './task/task.model';
 import { ProjectMember } from './project-member/project-member.model';
-import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ExistsInDatabaseConstraint } from './common/validators/exists-in-database.validator';
+import { SeederModule } from './seeder/seeder.module';
 
 @Module({
   imports: [
@@ -41,6 +41,7 @@ import { ExistsInDatabaseConstraint } from './common/validators/exists-in-databa
     ProjectModule,
     TaskModule,
     ProjectMemberModule,
+    SeederModule,
   ],
   providers: [AppService, ExistsInDatabaseConstraint],
 })
