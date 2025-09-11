@@ -1,98 +1,127 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Bluemine API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Blumine API é o backend para um sistema de gestão de projetos, desenvolvido para ser robusto, escalável e de fácil manutenção.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Funcionalidades Implementadas
 
-## Description
+- **Autenticação de Usuários**:
+  - Registro de novos usuários.
+  - Login com e-mail e senha.
+  - Sistema de autenticação baseado em JSON Web Tokens (JWT), com tokens de acesso e de atualização (refresh tokens) para maior segurança.
+  - Logout de usuários.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Gerenciamento de Usuários**:
+  - Criação, leitura, atualização e exclusão (CRUD) de usuários.
+  - Atribuição de papéis (roles) aos usuários: `admin`, `manager`, `developer`.
+  - Controle de acesso baseado em papéis para diferentes funcionalidades da API.
 
-## Project setup
+- **Gerenciamento de Projetos**:
+  - CRUD completo para projetos.
+  - Associação de um gerente (manager) a cada projeto.
+  - Listagem de projetos por usuário (gerente ou membro).
 
-```bash
-$ yarn install
-```
+- **Gerenciamento de Tarefas**:
+  - CRUD completo para tarefas.
+  - Associação de tarefas a projetos e a um responsável (assignee).
+  - Definição de status, prioridade e data de vencimento para as tarefas.
+  - Atualização do status das tarefas.
 
-## Compile and run the project
+- **Membros de Projetos**:
+  - Adição e remoção de membros (developers) em projetos.
+  - Atribuição de papéis específicos de projeto aos membros: `viewer`, `contributor`, `maintainer`.
 
-```bash
-# development
-$ yarn run start
+- **Documentação da API**:
+  - Geração automática de documentação interativa da API com Swagger (OpenAPI).
 
-# watch mode
-$ yarn run start:dev
+## Decisões Técnicas
 
-# production mode
-$ yarn run start:prod
-```
+- **Framework**: O [NestJS](https://nestjs.com/) foi escolhido como framework principal. Sua arquitetura modular, o uso de TypeScript e a estrutura opinativa promovem um desenvolvimento organizado, escalável e de fácil manutenção.
 
-## Run tests
+- **Banco de Dados e ORM**: Utilizamos o **PostgreSQL**, um banco de dados relacional robusto e confiável. A interação com o banco é gerenciada pelo **Sequelize**, através do `@nestjs/sequelize`, que facilita a modelagem dos dados e as consultas de forma segura e eficiente.
 
-```bash
-# unit tests
-$ yarn run test
+- **Autenticação**: A autenticação é implementada com **Passport.js**, utilizando uma estratégia local (e-mail e senha) e JWT. O uso de _refresh tokens_ aumenta a segurança, permitindo que os tokens de acesso tenham uma vida útil curta, enquanto a sessão do usuário pode ser mantida por mais tempo de forma segura.
 
-# e2e tests
-$ yarn run test:e2e
+- **Validação de Dados**: Para garantir a integridade dos dados que chegam à API, utilizamos os pacotes `class-validator` e `class-transformer`. Eles permitem a criação de DTOs (Data Transfer Objects) com regras de validação declarativas, tornando o código mais limpo e seguro.
 
-# test coverage
-$ yarn run test:cov
-```
+- **Containerização**: O ambiente de desenvolvimento é containerizado com **Docker** e **Docker Compose**. Isso garante que o ambiente seja consistente e fácil de configurar, tanto para desenvolvimento quanto para produção, incluindo o banco de dados PostgreSQL e uma interface de gerenciamento (Adminer).
 
-## Deployment
+- **Estrutura do Projeto**: A aplicação é dividida em módulos (Auth, User, Project, Task), seguindo as melhores práticas do NestJS. Isso promove a separação de responsabilidades e facilita a manutenção e a adição de novas funcionalidades. Foi implementada uma `BaseService` genérica para reaproveitar a lógica de CRUD.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- **Documentação da API**: A documentação é gerada automaticamente a partir dos controladores e DTOs usando o `@nestjs/swagger`, o que garante que a documentação esteja sempre atualizada com a implementação da API.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Instalação e Execução
 
-```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
-```
+### Pré-requisitos
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+- [Node.js](https://nodejs.org/) (versão 16 ou superior)
+- [Yarn](https://yarnpkg.com/)
+- [Docker](https://www.docker.com/) e [Docker Compose](https://docs.docker.com/compose/)
 
-## Resources
+### Passos para Instalação
 
-Check out a few resources that may come in handy when working with NestJS:
+1.  **Clone o repositório:**
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+    ```bash
+    git clone <URL_DO_REPOSITORIO>
+    cd bluemine-backend
+    ```
 
-## Support
+2.  **Instale as dependências:**
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+    ```bash
+    yarn install
+    ```
 
-## Stay in touch
+3.  **Configuração do Ambiente:**
+    - Crie uma cópia do arquivo de exemplo `.env.example` e renomeie para `.env`:
+      ```bash
+      cp .env.example .env
+      ```
+    - Preencha as variáveis de ambiente no arquivo `.env` com as suas configurações, especialmente as de banco de dados e JWT secrets.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+4.  **Inicie os containers Docker:**
+    - Este comando irá iniciar o container do banco de dados PostgreSQL e do Adminer.
 
-## License
+    ```bash
+    docker-compose up -d
+    ```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+5.  **Execute as Migrations (Opcional, se `synchronize: true` estiver desabilitado):**
+    - O projeto está configurado para sincronizar as entidades com o banco de dados automaticamente. Se preferir usar migrations, execute:
+    ```bash
+    yarn sequelize-cli db:migrate
+    ```
+
+### Executando a Aplicação
+
+- **Modo de Desenvolvimento (com watch mode):**
+
+  ```bash
+  yarn run start:dev
+  ```
+
+  A aplicação estará disponível em `http://localhost:3000`.
+
+- **Modo de Produção:**
+  ```bash
+  yarn run build
+  yarn run start:prod
+  ```
+
+### Acessando a Documentação da API
+
+Após iniciar a aplicação, a documentação da API gerada pelo Swagger estará disponível em:
+[http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+
+### Executando os Testes
+
+- **Testes Unitários:**
+
+  ```bash
+  yarn run test
+  ```
+
+- **Testes com Coverage:**
+  ```bash
+  yarn run test:cov
+  ```
