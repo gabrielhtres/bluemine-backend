@@ -48,13 +48,11 @@ export class AuthService {
     if (existingUser) {
       throw new ConflictException('Email já cadastrado');
     }
-
-    const hashedPassword = await bcrypt.hash(password, 12);
-
+    
     const user = await this.userService.create({
       name,
       email,
-      password: hashedPassword,
+      password,
     });
 
     const { password: _, ...result } = user.get({ plain: true });
@@ -101,13 +99,13 @@ export class AuthService {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('JWT_SECRET'),
-        expiresIn: this.configService.get<string>('JWT_EXPIRATION_TIME'),
+        expiresIn: this.configService.get<string>('JWT_EXPIRATION_TIME') as any,
       }),
       this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
         expiresIn: this.configService.get<string>(
           'JWT_REFRESH_EXPIRATION_TIME',
-        ),
+        ) as any,
       }),
     ]);
 

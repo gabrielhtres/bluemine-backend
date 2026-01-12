@@ -305,7 +305,7 @@
 					"response": []
 				},
 				{
-					"name": "/task/toggle-status/:id",
+					"name": "/task/:id/status",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -322,14 +322,14 @@
 							}
 						},
 						"url": {
-							"raw": "{{api-url}}/task/toggle-status/1",
+							"raw": "{{api-url}}/task/1/status",
 							"host": [
 								"{{api-url}}"
 							],
 							"path": [
 								"task",
-								"toggle-status",
-								"1"
+								"1",
+								"status"
 							]
 						}
 					},

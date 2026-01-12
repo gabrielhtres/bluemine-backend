@@ -50,21 +50,14 @@ export class TaskController extends BaseController<Task> {
     return this.taskService.findByAssigneeId(+userId);
   }
 
-  @Patch('toggle-status/:id')
-  @Roles('developer')
-  @ApiOperation({ summary: 'Atualiza o status de uma tarefa' })
-  @ApiParam({ name: 'id', description: 'ID da tarefa' })
-  @ApiResponse({
-    status: 200,
-    description: 'Status da tarefa atualizado com sucesso.',
-    type: Task,
-  })
-  @ApiResponse({ status: 404, description: 'Tarefa não encontrada.' })
-  updateStatus(
+  @Patch(':id/status') // Nome correto
+  @Roles('developer', 'manager') // Manager também deveria poder mudar status
+  async updateStatus(
     @Param('id') id: string,
     @Body() updateTaskStatusDto: UpdateTaskStatusDto,
+    @CurrentUser('id') userId: string, // INJETE ISSO
   ): Promise<Task> {
-    return this.taskService.updateStatus(+id, updateTaskStatusDto.status);
+    return this.taskService.updateStatus(+id, updateTaskStatusDto.status, +userId);
   }
 
   @Post()

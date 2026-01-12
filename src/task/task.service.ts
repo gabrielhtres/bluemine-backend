@@ -1,9 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { BaseService } from '../base/base.service';
 import { Task } from './task.model';
 import { TaskStatus } from './dto/create-task.dto';
-import { Project, User } from 'src/models';
+import { Project, ProjectMember, User } from 'src/models';
 
 @Injectable()
 export class TaskService extends BaseService<Task> {
@@ -34,12 +34,21 @@ export class TaskService extends BaseService<Task> {
     });
   }
 
-  async updateStatus(id: number, status: TaskStatus): Promise<Task> {
-    const task = await this.findOne(id);
-    if (!task) {
-      throw new NotFoundException(`Tarefa com ID ${id} não encontrada`);
+  async updateStatus(taskId: number, newStatus: TaskStatus, userId: number): Promise<Task> {
+    const task = await this.taskModel.findByPk(taskId, {
+      include: [{ model: Project, include: [ProjectMember] }] // Precisa ver os membros
+    });
+
+    if (!task) throw new NotFoundException('Tarefa não encontrada.');
+
+    // VALIDAÇÃO DE PROPRIEDADE
+    const isManager = task.project.managerId === userId;
+    const isMember = task.project.developers.some(dev => dev.id === userId);
+
+    if (!isManager && !isMember) {
+      throw new ForbiddenException('Você não tem permissão para alterar esta tarefa.');
     }
-    task.status = status;
-    return task.save();
+
+    return task.update({ status: newStatus });
   }
 }

@@ -72,17 +72,4 @@ export class CreateProjectDto {
   @IsDate({ message: 'A data de fim deve ser uma data válida.' })
   @IsNotEmpty({ message: 'A data de fim é obrigatória.' })
   endDate: Date;
-
-  @ApiProperty({
-    description: 'ID do usuário gerente responsável pelo projeto.',
-    example: 1,
-  })
-  @IsNumber({}, { message: 'O ID do gerente deve ser um número.' })
-  @IsPositive({ message: 'O ID do gerente deve ser um número positivo.' })
-  @IsNotEmpty({ message: 'O ID do gerente é obrigatório.' })
-  @ExistsInDatabase(
-    { model: User },
-    { message: 'O gerente especificado não existe.' },
-  )
-  managerId: number;
 }

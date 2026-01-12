@@ -19,6 +19,8 @@ export class UserService extends BaseService<User> {
       saltRounds,
     );
 
+    console.log('vtnc', hashedPassword)
+
     return super.create({
       ...createUserDto,
       password: hashedPassword,
