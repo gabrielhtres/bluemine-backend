@@ -7,6 +7,8 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import type { Request } from 'express';
@@ -20,8 +22,10 @@ import {
   ApiResponse,
   ApiBody,
   ApiBearerAuth,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { LoginDto } from './dto/login.dto';
+import { avatarUrlAnyFilesMulterOptions } from 'src/common/upload/avatar-upload';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -46,10 +50,30 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: 'Registra um novo usuário no sistema' })
+  @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 201, description: 'Usuário registrado com sucesso.' })
   @ApiResponse({ status: 409, description: 'E-mail já cadastrado (Conflict).' })
-  async register(@Body() createUserDto: CreateUserDto) {
-    return this.authService.register(createUserDto);
+  @UseInterceptors(AnyFilesInterceptor(avatarUrlAnyFilesMulterOptions))
+  async register(
+    @Body() createUserDto: CreateUserDto,
+    @UploadedFiles() files?: any[],
+  ) {
+    const avatar = Array.isArray(files)
+      ? files.find((f) => f?.fieldname === 'avatarUrl')
+      : undefined;
+    const avatarUrlFromFile = avatar?.filename
+      ? `/uploads/avatars/${avatar.filename}`
+      : undefined;
+
+    const avatarUrlFromBody =
+      typeof createUserDto.avatarUrl === 'string' && createUserDto.avatarUrl.trim()
+        ? createUserDto.avatarUrl.trim()
+        : undefined;
+
+    return this.authService.register(
+      createUserDto,
+      avatarUrlFromFile ?? avatarUrlFromBody,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

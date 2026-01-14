@@ -6,6 +6,7 @@ import {
   Post,
   Put,
   Delete,
+  Patch,
   UseGuards,
 } from '@nestjs/common';
 import { BaseController } from '../base/base.controller';
@@ -22,7 +23,9 @@ import {
 } from '@nestjs/swagger';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { UpdateProjectStatusDto } from './dto/update-project-status.dto';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 
 @ApiBearerAuth()
 @ApiTags('Projects')
@@ -59,8 +62,11 @@ export class ProjectController extends BaseController<Project> {
     description: 'Lista de projetos retornada com sucesso.',
     type: [Project],
   })
-  findAll(): Promise<Project[]> {
-    return super.findAll();
+  findAll(
+    @CurrentUser('id') userId?: string,
+    @CurrentUser('role') userRole?: string,
+  ): Promise<Project[]> {
+    return this.projectService.findAll(userId ? +userId : undefined, userRole);
   }
 
   @Get('my-projects')
@@ -74,6 +80,34 @@ export class ProjectController extends BaseController<Project> {
     return this.projectService.findByUserId(+userId);
   }
 
+  @Patch(':id/status')
+  @Roles('manager')
+  @ApiOperation({ summary: 'Atualiza o status de um projeto' })
+  @ApiParam({ name: 'id', description: 'ID do projeto' })
+  @ApiResponse({
+    status: 200,
+    description: 'Status do projeto atualizado com sucesso.',
+    type: Project,
+  })
+  @ApiResponse({ status: 404, description: 'Projeto não encontrado.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Você não tem permissão para alterar este projeto.',
+  })
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() updateProjectStatusDto: UpdateProjectStatusDto,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole: string,
+  ): Promise<Project> {
+    return this.projectService.updateStatus(
+      +id,
+      updateProjectStatusDto.status,
+      +userId,
+      userRole,
+    );
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Busca um projeto pelo ID' })
   @ApiParam({ name: 'id', description: 'ID do projeto' })
@@ -84,7 +118,7 @@ export class ProjectController extends BaseController<Project> {
   })
   @ApiResponse({ status: 404, description: 'Projeto não encontrado.' })
   findOne(@Param('id') id: string): Promise<Project> {
-    return super.findOne(id);
+    return this.projectService.findOne(+id);
   }
 
   @Put(':id')
@@ -100,7 +134,7 @@ export class ProjectController extends BaseController<Project> {
     @Param('id') id: string,
     @Body() data: UpdateProjectDto,
   ): Promise<Project> {
-    return super.update(id, data as any);
+    return this.projectService.update(+id, data);
   }
 
   @Delete(':id')

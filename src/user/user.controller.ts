@@ -9,6 +9,8 @@ import {
   Delete,
   NotFoundException,
 } from '@nestjs/common';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { BaseController } from '../base/base.controller';
 import { User } from './user.model';
 import { UserService } from './user.service';
@@ -21,10 +23,12 @@ import {
   ApiParam,
   ApiResponse,
   ApiTags,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { CreateUserDto } from './dto/create-user.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { avatarUrlAnyFilesMulterOptions } from 'src/common/upload/avatar-upload';
+import { CurrentUser } from 'src/auth/decorators/user.decorator';
 
 @ApiBearerAuth()
 @ApiTags('Users')
@@ -37,7 +41,10 @@ export class UserController extends BaseController<User> {
 
   @Post()
   @ApiExcludeEndpoint()
-  create(@Body() data: CreateUserDto): Promise<User> {
+  create(
+    @Body() _data: Partial<User>,
+    @CurrentUser('id') _managerId?: string,
+  ): Promise<User> {
     throw new NotFoundException(
       'Para registrar um novo usuário, utilize o endpoint /auth/register',
     );
@@ -90,6 +97,7 @@ export class UserController extends BaseController<User> {
   @Put(':id')
   @Roles('admin')
   @ApiOperation({ summary: 'Atualiza um usuário existente' })
+  @ApiConsumes('multipart/form-data')
   @ApiParam({ name: 'id', description: 'ID do usuário' })
   @ApiResponse({
     status: 200,
@@ -97,8 +105,43 @@ export class UserController extends BaseController<User> {
     type: User,
   })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
-  update(@Param('id') id: string, @Body() data: UpdateUserDto): Promise<User> {
-    return super.update(id, data);
+  @UseInterceptors(AnyFilesInterceptor(avatarUrlAnyFilesMulterOptions))
+  async update(
+    @Param('id') id: string,
+    @Body() data: UpdateUserDto,
+    @UploadedFiles() files?: any[],
+  ): Promise<User> {
+    const avatar = Array.isArray(files)
+      ? files.find((f) => f?.fieldname === 'avatarUrl')
+      : undefined;
+
+    // Prioridade: arquivo avatar > body.avatarUrl (string)
+    // Importante: se NENHUM dos dois for enviado, não altera o avatar existente.
+    const avatarUrlFromFile = avatar?.filename
+      ? `/uploads/avatars/${avatar.filename}`
+      : undefined;
+
+    const hasAvatarUrlInBody = Object.prototype.hasOwnProperty.call(
+      data as any,
+      'avatarUrl',
+    );
+    const rawBodyAvatarUrl =
+      typeof (data as any).avatarUrl === 'string' ? (data as any).avatarUrl : undefined;
+    const normalizedBodyAvatarUrl =
+      rawBodyAvatarUrl !== undefined ? rawBodyAvatarUrl.trim() : undefined;
+
+    const shouldSetAvatarUrl = !!avatarUrlFromFile || hasAvatarUrlInBody;
+
+    const avatarUrl: string | null =
+      avatarUrlFromFile ??
+      (!normalizedBodyAvatarUrl || normalizedBodyAvatarUrl.toLowerCase() === 'null'
+        ? null
+        : normalizedBodyAvatarUrl);
+
+    return this.userService.updateWithSecurity(+id, {
+      ...data,
+      ...(shouldSetAvatarUrl ? { avatarUrl } : {}),
+    });
   }
 
   @Delete(':id')

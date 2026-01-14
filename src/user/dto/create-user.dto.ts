@@ -31,4 +31,14 @@ export class CreateUserDto {
   @IsOptional()
   @IsEnum(['admin', 'manager', 'developer'])
   role?: 'admin' | 'manager' | 'developer';
+
+  @ApiProperty({
+    description:
+      'URL do avatar do usuário. Pode ser enviado como string (ex.: /uploads/avatars/xxx.jpg).',
+    required: false,
+    example: '/uploads/avatars/1768344503028-88834122.jpg',
+  })
+  @IsOptional()
+  @IsString()
+  avatarUrl?: string | null;
 }

@@ -1,6 +1,5 @@
 import {
   Injectable,
-  UnauthorizedException,
   ConflictException,
   ForbiddenException,
 } from '@nestjs/common';
@@ -9,7 +8,6 @@ import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcrypt';
 import { User } from 'src/models';
 import { CreateUserDto } from '../user/dto/create-user.dto';
-import { RolePermissions } from './roles';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -36,13 +34,14 @@ export class AuthService {
 
     return {
       ...tokens,
-      permissions: user.role ? RolePermissions[user.role] : [],
+      role: user.role,
       user: user.name,
+      avatarUrl: user.avatarUrl,
     };
   }
 
-  async register(createUserDto: CreateUserDto) {
-    const { email, password, name } = createUserDto;
+  async register(createUserDto: CreateUserDto, avatarUrl?: string) {
+    const { email, password, name, role } = createUserDto;
 
     const existingUser = await this.userService.findOneByEmail(email);
     if (existingUser) {
@@ -53,10 +52,18 @@ export class AuthService {
       name,
       email,
       password,
+      role,
+      avatarUrl,
     });
 
-    const { password: _, ...result } = user.get({ plain: true });
-    return result;
+    const plain = user.get({ plain: true }) as any;
+    return {
+      id: plain.id,
+      name: plain.name,
+      email: plain.email,
+      role: plain.role,
+      avatarUrl: plain.avatarUrl,
+    };
   }
 
   async logout(userId: number) {
@@ -81,8 +88,9 @@ export class AuthService {
 
     return {
       ...tokens,
-      permissions: user.role ? RolePermissions[user.role] : [],
+      role: user.role,
       user: user.name,
+      avatarUrl: user.avatarUrl,
     };
   }
 

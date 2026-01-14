@@ -6,6 +6,7 @@ import { UserModule } from './user/user.module';
 import { ProjectModule } from './project/project.module';
 import { TaskModule } from './task/task.module';
 import { ProjectMemberModule } from './project-member/project-member.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { Project } from './project/project.model';
 import { Task } from './task/task.model';
 import { ProjectMember } from './project-member/project-member.model';
@@ -48,6 +49,7 @@ import * as Joi from 'joi';
     ProjectModule,
     TaskModule,
     ProjectMemberModule,
+    DashboardModule,
     SeederModule,
   ],
   providers: [AppService, ExistsInDatabaseConstraint],

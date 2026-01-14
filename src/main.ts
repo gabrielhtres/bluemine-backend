@@ -4,9 +4,11 @@ import { ValidationPipe } from '@nestjs/common';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { useContainer } from 'class-validator';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
@@ -19,9 +21,13 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: process.env.origin || 'http://localhost:5173',
     credentials: true,
   });
+
+  // Servir arquivos estáticos (ex.: avatar do usuário)
+  // Usa process.cwd() para funcionar tanto em dev (ts-node) quanto em build (dist/)
+  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
 
   const config = new DocumentBuilder()
     .setTitle('Bluemine API')

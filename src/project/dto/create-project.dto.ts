@@ -10,8 +10,6 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { ExistsInDatabase } from 'src/common/validators/exists-in-database.validator';
-import { User } from 'src/models';
 
 export enum ProjectStatus {
   PLANNED = 'planned',

@@ -16,9 +16,7 @@ export type ExistsInDatabaseValidationOptions = {
 
 @ValidatorConstraint({ name: 'existsInDatabase', async: true })
 @Injectable()
-export class ExistsInDatabaseConstraint
-  implements ValidatorConstraintInterface
-{
+export class ExistsInDatabaseConstraint implements ValidatorConstraintInterface {
   constructor(private readonly sequelize: Sequelize) {}
 
   async validate(value: any, args: ValidationArguments) {

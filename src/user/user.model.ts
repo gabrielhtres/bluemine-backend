@@ -46,6 +46,12 @@ export class User extends Model<User> {
     type: DataType.STRING,
     allowNull: true,
   })
+  declare avatarUrl?: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+  })
   declare currentHashedRefreshToken?: string;
 
   @BelongsToMany(() => Project, () => ProjectMember)

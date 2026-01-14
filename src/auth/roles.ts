@@ -1,7 +1,7 @@
 export const RolePermissions = {
-  admin: ['users'],
+  admin: ['users', 'projects', 'tasks', 'dashboard'],
   manager: ['projects', 'tasks', 'dashboard'],
-  developer: ['toggle_tasks', 'dashboard'],
+  developer: ['tasks', 'dashboard'],
 } as const;
 
 export type Role = keyof typeof RolePermissions;

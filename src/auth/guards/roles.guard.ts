@@ -30,7 +30,13 @@ export class RolesGuard implements CanActivate {
       );
     }
 
-    const hasRequiredRole = requiredRoles.includes(user.role);
+    // Admin tem acesso a todas as rotas que manager tem acesso
+    const effectiveRoles = [...requiredRoles];
+    if (requiredRoles.includes('manager') && !requiredRoles.includes('admin')) {
+      effectiveRoles.push('admin');
+    }
+
+    const hasRequiredRole = effectiveRoles.includes(user.role);
 
     if (hasRequiredRole) {
       return true;

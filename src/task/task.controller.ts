@@ -55,9 +55,15 @@ export class TaskController extends BaseController<Task> {
   async updateStatus(
     @Param('id') id: string,
     @Body() updateTaskStatusDto: UpdateTaskStatusDto,
-    @CurrentUser('id') userId: string, // INJETE ISSO
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole: string,
   ): Promise<Task> {
-    return this.taskService.updateStatus(+id, updateTaskStatusDto.status, +userId);
+    return this.taskService.updateStatus(
+      +id,
+      updateTaskStatusDto.status,
+      +userId,
+      userRole,
+    );
   }
 
   @Post()
@@ -80,8 +86,11 @@ export class TaskController extends BaseController<Task> {
     description: 'Lista de tarefas retornada com sucesso.',
     type: [Task],
   })
-  findAll(): Promise<Task[]> {
-    return super.findAll();
+  findAll(
+    @CurrentUser('id') userId?: string,
+    @CurrentUser('role') userRole?: string,
+  ): Promise<Task[]> {
+    return this.taskService.findAll(userId ? +userId : undefined, userRole);
   }
 
   @Get(':id')

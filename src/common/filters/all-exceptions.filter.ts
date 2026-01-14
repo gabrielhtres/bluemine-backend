@@ -6,6 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
+import { MulterError } from 'multer';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -15,9 +16,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const { httpAdapter } = this.httpAdapterHost;
     const ctx = host.switchToHttp();
 
+    const isMulterError = (e: unknown): e is MulterError =>
+      e instanceof MulterError;
+
     const httpStatus =
       exception instanceof HttpException
         ? exception.getStatus()
+        : isMulterError(exception)
+          ? HttpStatus.BAD_REQUEST
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
     const responseBody = {
@@ -27,6 +33,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message:
         exception instanceof HttpException
           ? exception.getResponse()
+          : isMulterError(exception)
+            ? exception.message
           : 'Internal server error',
     };
 

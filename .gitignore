@@ -3,6 +3,9 @@
 /node_modules
 /build
 
+# uploads (user avatars, etc.)
+/uploads/
+
 # Logs
 logs
 *.log
