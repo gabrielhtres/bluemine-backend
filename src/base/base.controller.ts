@@ -28,6 +28,7 @@ export class BaseController<T extends Model> {
     @Body() data: Partial<T>,
     @CurrentUser('id') managerId?: string,
   ): Promise<T> {
+    void managerId;
     return this.baseService.create(data);
   }
 

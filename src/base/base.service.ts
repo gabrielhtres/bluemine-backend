@@ -1,11 +1,11 @@
 import { NotFoundException } from '@nestjs/common';
 import { Model, ModelCtor } from 'sequelize-typescript';
 
-export class BaseService<T extends Model> {
+export class BaseService<T extends Model<any, any>> {
   constructor(protected readonly model: ModelCtor<T>) {}
 
-  async create(data: any): Promise<T> {
-    return this.model.create(data);
+  async create(data: unknown): Promise<T> {
+    return this.model.create(data as T['_creationAttributes']);
   }
 
   async findAll(): Promise<T[]> {
@@ -18,9 +18,9 @@ export class BaseService<T extends Model> {
     return record;
   }
 
-  async update(id: number, data: any): Promise<T> {
+  async update(id: number, data: unknown): Promise<T> {
     const record = await this.findOne(id);
-    return record.update(data);
+    return record.update(data as Partial<T['_attributes']>);
   }
 
   async remove(id: number): Promise<void> {

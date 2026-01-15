@@ -75,7 +75,7 @@ export class TaskController extends BaseController<Task> {
     type: Task,
   })
   create(@Body() data: CreateTaskDto): Promise<Task> {
-    return super.create(data as any);
+    return super.create(data as unknown as Partial<Task>);
   }
 
   @Get()

@@ -30,6 +30,8 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { avatarUrlAnyFilesMulterOptions } from 'src/common/upload/avatar-upload';
 import { CurrentUser } from 'src/auth/decorators/user.decorator';
 
+type UploadedAvatarFile = { fieldname?: string; filename?: string };
+
 @ApiBearerAuth()
 @ApiTags('Users')
 @Controller('user')
@@ -45,6 +47,8 @@ export class UserController extends BaseController<User> {
     @Body() _data: Partial<User>,
     @CurrentUser('id') _managerId?: string,
   ): Promise<User> {
+    void _data;
+    void _managerId;
     throw new NotFoundException(
       'Para registrar um novo usuário, utilize o endpoint /auth/register',
     );
@@ -109,7 +113,7 @@ export class UserController extends BaseController<User> {
   async update(
     @Param('id') id: string,
     @Body() data: UpdateUserDto,
-    @UploadedFiles() files?: any[],
+    @UploadedFiles() files?: UploadedAvatarFile[],
   ): Promise<User> {
     const avatar = Array.isArray(files)
       ? files.find((f) => f?.fieldname === 'avatarUrl')
@@ -121,12 +125,9 @@ export class UserController extends BaseController<User> {
       ? `/uploads/avatars/${avatar.filename}`
       : undefined;
 
-    const hasAvatarUrlInBody = Object.prototype.hasOwnProperty.call(
-      data as any,
-      'avatarUrl',
-    );
+    const hasAvatarUrlInBody = Object.hasOwn(data, 'avatarUrl');
     const rawBodyAvatarUrl =
-      typeof (data as any).avatarUrl === 'string' ? (data as any).avatarUrl : undefined;
+      typeof data.avatarUrl === 'string' ? data.avatarUrl : undefined;
     const normalizedBodyAvatarUrl =
       rawBodyAvatarUrl !== undefined ? rawBodyAvatarUrl.trim() : undefined;
 
@@ -134,7 +135,8 @@ export class UserController extends BaseController<User> {
 
     const avatarUrl: string | null =
       avatarUrlFromFile ??
-      (!normalizedBodyAvatarUrl || normalizedBodyAvatarUrl.toLowerCase() === 'null'
+      (!normalizedBodyAvatarUrl ||
+      normalizedBodyAvatarUrl.toLowerCase() === 'null'
         ? null
         : normalizedBodyAvatarUrl);
 

@@ -27,13 +27,15 @@ export class ProjectMemberService {
         return [];
       }
 
-      const membersToCreate = assignments.map((assignment) => ({
+      const membersToCreate: Array<
+        Pick<ProjectMember, 'projectId' | 'userId' | 'role'>
+      > = assignments.map((assignment) => ({
         projectId,
         userId: assignment.developerId,
         role: assignment.role,
       }));
 
-      return this.projectMemberRepository.bulkCreate(membersToCreate as any, {
+      return this.projectMemberRepository.bulkCreate(membersToCreate, {
         transaction: t,
       });
     });

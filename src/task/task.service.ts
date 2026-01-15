@@ -24,15 +24,15 @@ export class TaskService extends BaseService<Task> {
   async findAll(userId?: number, userRole?: string): Promise<Task[]> {
     // Se for admin, retorna todas as tarefas
     if (userRole === 'admin') {
-    return this.taskModel.findAll({
-      include: [
-        {
-          model: Project,
-          attributes: ['name'],
-        },
-        {
-          model: User,
-          as: 'assignee',
+      return this.taskModel.findAll({
+        include: [
+          {
+            model: Project,
+            attributes: ['name'],
+          },
+          {
+            model: User,
+            as: 'assignee',
             attributes: ['id', 'name', 'email', 'role', 'avatarUrl'],
           },
         ],

@@ -46,7 +46,7 @@ export class User extends Model<User> {
     type: DataType.STRING,
     allowNull: true,
   })
-  declare avatarUrl?: string;
+  declare avatarUrl?: string | null;
 
   @Column({
     type: DataType.STRING,

@@ -3,7 +3,21 @@ import { InjectModel } from '@nestjs/sequelize';
 import { Task } from '../task/task.model';
 import { Project } from '../project/project.model';
 import { ProjectMember } from '../project-member/project-member.model';
-import { Op, Sequelize } from 'sequelize';
+import { Op } from 'sequelize';
+import type { WhereOptions } from 'sequelize';
+
+type ProjectStatusItem = { status: Project['status']; count: number };
+type TaskPriorityItem = {
+  priority: Task['priority'];
+  status: Task['status'];
+  count: number;
+};
+type TaskProgressByProjectItem = {
+  projectId: number;
+  projectName: string;
+  status: Task['status'];
+  count: number;
+};
 
 @Injectable()
 export class DashboardService {
@@ -21,7 +35,7 @@ export class DashboardService {
     startOfWeek.setHours(0, 0, 0, 0);
 
     // Filtro de projetos baseado no role
-    let projectFilter: any = {};
+    let projectFilter: WhereOptions = {};
     if (userRole !== 'admin' && userId) {
       const memberProjectIds = (
         await this.projectMemberModel.findAll({
@@ -36,7 +50,7 @@ export class DashboardService {
     }
 
     // Filtro de tarefas baseado no role
-    let taskFilter: any = {};
+    let taskFilter: WhereOptions = {};
     if (userRole !== 'admin' && userId) {
       const managedProjects = await this.projectModel.findAll({
         where: { managerId: userId },
@@ -94,17 +108,17 @@ export class DashboardService {
 
     // Agrupa projetos por status manualmente
     const projectStatusMap = new Map<string, number>();
-    allProjects.forEach((project: any) => {
-      const status = project.status || 'planned';
+    allProjects.forEach((project) => {
+      const status: Project['status'] = project.status ?? 'planned';
       projectStatusMap.set(status, (projectStatusMap.get(status) || 0) + 1);
     });
 
-    const projectStatus = Array.from(projectStatusMap.entries()).map(
-      ([status, count]) => ({
-        status,
-        count,
-      }),
-    );
+    const projectStatus: ProjectStatusItem[] = Array.from(
+      projectStatusMap.entries(),
+    ).map(([status, count]) => ({
+      status: status as Project['status'],
+      count,
+    }));
 
     // 5. Prioridade das Tarefas
     const allTasksForPriority = await this.taskModel.findAll({
@@ -113,21 +127,22 @@ export class DashboardService {
     });
 
     // Agrupa tarefas por prioridade + status manualmente (para permitir filtros no frontend)
-    const taskPriorityMap = new Map<
-      string,
-      { priority: string; status: string; count: number }
-    >();
-    allTasksForPriority.forEach((task: any) => {
-      const priority = task.priority || 'medium';
-      const status = task.status || 'todo';
+    const taskPriorityMap = new Map<string, TaskPriorityItem>();
+    allTasksForPriority.forEach((task) => {
+      const priority: Task['priority'] = task.priority ?? 'medium';
+      const status: Task['status'] = task.status ?? 'todo';
       const key = `${priority}-${status}`;
-      if (!taskPriorityMap.has(key)) {
-        taskPriorityMap.set(key, { priority, status, count: 0 });
+      const existing = taskPriorityMap.get(key);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        taskPriorityMap.set(key, { priority, status, count: 1 });
       }
-      taskPriorityMap.get(key)!.count += 1;
     });
 
-    const taskPriority = Array.from(taskPriorityMap.values());
+    const taskPriority: TaskPriorityItem[] = Array.from(
+      taskPriorityMap.values(),
+    );
 
     // 6. Progresso das Tarefas por Projeto
     const allTasks = await this.taskModel.findAll({
@@ -141,22 +156,28 @@ export class DashboardService {
     });
 
     // Agrupa tarefas por projeto e status
-    const taskProgressByProjectMap = new Map<string, any>();
-    allTasks.forEach((task: any) => {
+    const taskProgressByProjectMap = new Map<
+      string,
+      TaskProgressByProjectItem
+    >();
+    allTasks.forEach((task) => {
       const key = `${task.projectId}-${task.status}`;
-      if (!taskProgressByProjectMap.has(key)) {
+      const existing = taskProgressByProjectMap.get(key);
+      if (existing) {
+        existing.count += 1;
+      } else {
         taskProgressByProjectMap.set(key, {
           projectId: task.projectId,
-          projectName: task.project?.name || 'Unknown',
+          projectName: task.project?.name ?? 'Unknown',
           status: task.status,
-          count: 0,
+          count: 1,
         });
       }
-      const item = taskProgressByProjectMap.get(key);
-      item.count += 1;
     });
 
-    const taskProgressByProject = Array.from(taskProgressByProjectMap.values());
+    const taskProgressByProject: TaskProgressByProjectItem[] = Array.from(
+      taskProgressByProjectMap.values(),
+    );
 
     return {
       activeProjects,
@@ -194,7 +215,7 @@ export class DashboardService {
       // Filtro para tarefas onde:
       // 1. O usuário é assignee, OU
       // 2. A tarefa pertence a um projeto onde o usuário é manager ou membro
-      const userTaskFilter: any =
+      const userTaskFilter: WhereOptions =
         allProjectIds.length > 0
           ? {
               [Op.or]: [
@@ -235,21 +256,22 @@ export class DashboardService {
       });
 
       // Agrupa tarefas por prioridade + status manualmente (para permitir filtros no frontend)
-      const tasksByPriorityMap = new Map<
-        string,
-        { priority: string; status: string; count: number }
-      >();
-      (allUserTasks || []).forEach((task: any) => {
-        const priority = task.priority || 'medium';
-        const status = task.status || 'todo';
+      const tasksByPriorityMap = new Map<string, TaskPriorityItem>();
+      allUserTasks.forEach((task) => {
+        const priority: Task['priority'] = task.priority ?? 'medium';
+        const status: Task['status'] = task.status ?? 'todo';
         const key = `${priority}-${status}`;
-        if (!tasksByPriorityMap.has(key)) {
-          tasksByPriorityMap.set(key, { priority, status, count: 0 });
+        const existing = tasksByPriorityMap.get(key);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          tasksByPriorityMap.set(key, { priority, status, count: 1 });
         }
-        tasksByPriorityMap.get(key)!.count += 1;
       });
 
-      const tasksByPriority = Array.from(tasksByPriorityMap.values());
+      const tasksByPriority: TaskPriorityItem[] = Array.from(
+        tasksByPriorityMap.values(),
+      );
 
       // 5. Próximos Vencimentos (próximos 7 dias) - apenas tarefas com dueDate não nulo
       const upcomingDeadlines = await this.taskModel.findAll({
@@ -269,24 +291,28 @@ export class DashboardService {
         limit: 10,
       });
 
+      type TaskWithProject = Task & { project?: Project | null };
+
       return {
         todoTasks,
         inProgressTasks,
         overdueTasks,
         tasksByPriority,
-        upcomingDeadlines: upcomingDeadlines.map((task: any) => ({
-          id: task.id,
-          title: task.title,
-          dueDate: task.dueDate,
-          priority: task.priority,
-          status: task.status,
-          project: task.project
-            ? {
-                id: task.project.id,
-                name: task.project.name,
-              }
-            : null,
-        })),
+        upcomingDeadlines: (upcomingDeadlines as TaskWithProject[]).map(
+          (task) => ({
+            id: task.id,
+            title: task.title,
+            dueDate: task.dueDate,
+            priority: task.priority,
+            status: task.status,
+            project: task.project
+              ? {
+                  id: task.project.id,
+                  name: task.project.name,
+                }
+              : null,
+          }),
+        ),
       };
     } catch (error) {
       console.error('Error in getDeveloperDashboard:', error);

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { MulterError } from 'multer';
+import type { Request, Response } from 'express';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -15,6 +16,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const { httpAdapter } = this.httpAdapterHost;
     const ctx = host.switchToHttp();
+    const request = ctx.getRequest<Request>();
+    const response = ctx.getResponse<Response>();
 
     const isMulterError = (e: unknown): e is MulterError =>
       e instanceof MulterError;
@@ -24,20 +27,22 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getStatus()
         : isMulterError(exception)
           ? HttpStatus.BAD_REQUEST
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+          : HttpStatus.INTERNAL_SERVER_ERROR;
+
+    let message: unknown = 'Internal server error';
+    if (exception instanceof HttpException) {
+      message = exception.getResponse();
+    } else if (isMulterError(exception)) {
+      message = exception.message;
+    }
 
     const responseBody = {
       statusCode: httpStatus,
       timestamp: new Date().toISOString(),
-      path: httpAdapter.getRequestUrl(ctx.getRequest()),
-      message:
-        exception instanceof HttpException
-          ? exception.getResponse()
-          : isMulterError(exception)
-            ? exception.message
-          : 'Internal server error',
+      path: String(httpAdapter.getRequestUrl(request)),
+      message,
     };
 
-    httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);
+    httpAdapter.reply(response, responseBody, httpStatus);
   }
 }

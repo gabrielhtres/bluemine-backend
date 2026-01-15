@@ -93,14 +93,16 @@ export class ProjectService extends BaseService<Project> {
     return project;
   }
 
-  async create(data: any): Promise<Project> {
-    const project = await this.projectModel.create(data);
+  async create(data: Partial<Project>): Promise<Project> {
+    const project = await this.projectModel.create(
+      data as unknown as Project['_creationAttributes'],
+    );
     return this.findOne(project.id);
   }
 
-  async update(id: number, data: any): Promise<Project> {
+  async update(id: number, data: Partial<Project>): Promise<Project> {
     const project = await this.findOne(id);
-    await project.update(data);
+    await project.update(data as unknown as Partial<Project['_attributes']>);
     return this.findOne(id);
   }
 

@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
+import type { Request } from 'express';
+import type { UserRole } from '../types/jwt-payload';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -21,10 +23,15 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
     const user = request.user;
 
-    if (!user || !user.role) {
+    const role =
+      user && typeof user === 'object'
+        ? ((user as { role?: unknown }).role as UserRole | undefined)
+        : undefined;
+
+    if (!role) {
       throw new ForbiddenException(
         'Acesso negado. Nenhuma permissão de usuário encontrada.',
       );
@@ -36,7 +43,7 @@ export class RolesGuard implements CanActivate {
       effectiveRoles.push('admin');
     }
 
-    const hasRequiredRole = effectiveRoles.includes(user.role);
+    const hasRequiredRole = effectiveRoles.includes(role);
 
     if (hasRequiredRole) {
       return true;

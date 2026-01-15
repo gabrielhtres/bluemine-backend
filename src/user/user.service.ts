@@ -13,7 +13,13 @@ export class UserService extends BaseService<User> {
     super(userModel);
   }
 
-  private readonly publicAttributes = ['id', 'name', 'email', 'role', 'avatarUrl'] as const;
+  private readonly publicAttributes = [
+    'id',
+    'name',
+    'email',
+    'role',
+    'avatarUrl',
+  ] as const;
 
   async findAll(): Promise<User[]> {
     return this.userModel.findAll({ attributes: [...this.publicAttributes] });
@@ -45,22 +51,27 @@ export class UserService extends BaseService<User> {
 
   async updateWithSecurity(
     id: number,
-    data: Partial<Omit<CreateUserDto, 'avatarUrl'> & { avatarUrl?: string | null }>,
+    data: Partial<
+      Omit<CreateUserDto, 'avatarUrl'> & { avatarUrl?: string | null }
+    >,
   ): Promise<User> {
     const user = await this.userModel.findByPk(id);
     if (!user) throw new NotFoundException('Usuário não encontrado.');
 
     const oldAvatarUrl = user.avatarUrl;
-    const updateData: any = { ...data };
+    const updateData: Partial<
+      Omit<CreateUserDto, 'avatarUrl'> & { avatarUrl?: string | null }
+    > = { ...data };
     if (updateData.password) {
       updateData.password = await bcrypt.hash(updateData.password, 12);
     }
 
     // Se avatarUrl foi enviado (string ou null), e houver avatar antigo, remove o arquivo antigo.
     if (Object.prototype.hasOwnProperty.call(updateData, 'avatarUrl')) {
-      const nextAvatarUrl = updateData.avatarUrl as string | null | undefined;
+      const nextAvatarUrl = updateData.avatarUrl;
       const shouldRemoveOld =
-        !!oldAvatarUrl && (nextAvatarUrl === null || nextAvatarUrl !== oldAvatarUrl);
+        !!oldAvatarUrl &&
+        (nextAvatarUrl === null || nextAvatarUrl !== oldAvatarUrl);
 
       if (shouldRemoveOld) {
         // oldAvatarUrl é algo como "/uploads/avatars/xxx.jpg"

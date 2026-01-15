@@ -13,6 +13,7 @@ import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import type { Request } from 'express';
 import { User } from 'src/user/user.model';
+import type { JwtRefreshPayload } from './types/jwt-payload';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { AuthGuard } from '@nestjs/passport';
@@ -26,6 +27,8 @@ import {
 } from '@nestjs/swagger';
 import { LoginDto } from './dto/login.dto';
 import { avatarUrlAnyFilesMulterOptions } from 'src/common/upload/avatar-upload';
+
+type UploadedAvatarFile = { fieldname?: string; filename?: string };
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -44,7 +47,9 @@ export class AuthController {
     description: 'Login bem-sucedido. Retorna tokens e permissões.',
   })
   @ApiResponse({ status: 401, description: 'Credenciais inválidas.' })
-  async login(@Req() req: Request, @Body() _loginDto: LoginDto) {
+  async login(@Req() req: Request, @Body() loginDto: LoginDto) {
+    // Mantém o DTO para documentação/validação
+    void loginDto;
     return this.authService.login(req.user as User);
   }
 
@@ -56,7 +61,7 @@ export class AuthController {
   @UseInterceptors(AnyFilesInterceptor(avatarUrlAnyFilesMulterOptions))
   async register(
     @Body() createUserDto: CreateUserDto,
-    @UploadedFiles() files?: any[],
+    @UploadedFiles() files?: UploadedAvatarFile[],
   ) {
     const avatar = Array.isArray(files)
       ? files.find((f) => f?.fieldname === 'avatarUrl')
@@ -66,7 +71,8 @@ export class AuthController {
       : undefined;
 
     const avatarUrlFromBody =
-      typeof createUserDto.avatarUrl === 'string' && createUserDto.avatarUrl.trim()
+      typeof createUserDto.avatarUrl === 'string' &&
+      createUserDto.avatarUrl.trim()
         ? createUserDto.avatarUrl.trim()
         : undefined;
 
@@ -104,7 +110,7 @@ export class AuthController {
     description: 'Não autorizado ou refresh token inválido.',
   })
   refreshTokens(@Req() req: Request) {
-    const user = req.user as any;
+    const user = req.user as JwtRefreshPayload;
     return this.authService.refreshTokens(user.sub, user.refreshToken);
   }
 }

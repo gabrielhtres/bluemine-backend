@@ -4,8 +4,6 @@ import {
   IsOptional,
   IsEnum,
   IsDate,
-  IsNumber,
-  IsPositive,
   MinLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';

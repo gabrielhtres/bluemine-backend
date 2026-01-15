@@ -19,8 +19,8 @@ export type ExistsInDatabaseValidationOptions = {
 export class ExistsInDatabaseConstraint implements ValidatorConstraintInterface {
   constructor(private readonly sequelize: Sequelize) {}
 
-  async validate(value: any, args: ValidationArguments) {
-    if (!value) {
+  async validate(value: unknown, args: ValidationArguments): Promise<boolean> {
+    if (value === null || value === undefined || value === '') {
       return false;
     }
 
@@ -29,11 +29,16 @@ export class ExistsInDatabaseConstraint implements ValidatorConstraintInterface 
     const column = options.column || 'id';
 
     try {
-      const record = await this.sequelize.model(model.name).findOne({
-        where: { [column]: value },
+      const modelCtor = this.sequelize.model(model.name) as {
+        findOne: (opts: { where: Record<string, unknown> }) => Promise<unknown>;
+      };
+
+      const where: Record<string, unknown> = { [column]: value };
+      const record = await modelCtor.findOne({
+        where,
       });
       return !!record;
-    } catch (e) {
+    } catch {
       return false;
     }
   }
@@ -41,8 +46,7 @@ export class ExistsInDatabaseConstraint implements ValidatorConstraintInterface 
   defaultMessage(args: ValidationArguments) {
     const options = args.constraints[0] as ExistsInDatabaseValidationOptions;
     const modelName = options.model.name;
-    const value = args.value;
-    return `O ${modelName} com o ID '${value}' não foi encontrado.`;
+    return `O ${modelName} com o ID '${String(args.value)}' não foi encontrado.`;
   }
 }
 

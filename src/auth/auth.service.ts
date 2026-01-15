@@ -9,6 +9,8 @@ import * as bcrypt from 'bcrypt';
 import { User } from 'src/models';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { ConfigService } from '@nestjs/config';
+import type { StringValue } from 'ms';
+import type { UserRole } from './types/jwt-payload';
 
 @Injectable()
 export class AuthService {
@@ -47,7 +49,7 @@ export class AuthService {
     if (existingUser) {
       throw new ConflictException('Email já cadastrado');
     }
-    
+
     const user = await this.userService.create({
       name,
       email,
@@ -56,13 +58,12 @@ export class AuthService {
       avatarUrl,
     });
 
-    const plain = user.get({ plain: true }) as any;
     return {
-      id: plain.id,
-      name: plain.name,
-      email: plain.email,
-      role: plain.role,
-      avatarUrl: plain.avatarUrl,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatarUrl: user.avatarUrl,
     };
   }
 
@@ -101,19 +102,20 @@ export class AuthService {
     });
   }
 
-  private async getTokens(userId: number, email: string, role: string) {
+  private async getTokens(userId: number, email: string, role: UserRole) {
     const payload = { sub: userId, email, role };
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('JWT_SECRET'),
-        expiresIn: this.configService.get<string>('JWT_EXPIRATION_TIME') as any,
+        expiresIn: (this.configService.get<string>('JWT_EXPIRATION_TIME') ??
+          '15m') as StringValue,
       }),
       this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-        expiresIn: this.configService.get<string>(
+        expiresIn: (this.configService.get<string>(
           'JWT_REFRESH_EXPIRATION_TIME',
-        ) as any,
+        ) ?? '7d') as StringValue,
       }),
     ]);
 

@@ -1,9 +1,19 @@
 import { existsSync, mkdirSync } from 'fs';
 import { extname, join } from 'path';
 import { diskStorage } from 'multer';
+import type { StorageEngine } from 'multer';
 import { BadRequestException } from '@nestjs/common';
 
 const AVATAR_FILE_FIELD = 'avatarUrl';
+
+type MulterCallback = (error: Error | null, acceptFile: boolean) => void;
+type DestinationCallback = (error: Error | null, destination: string) => void;
+type FilenameCallback = (error: Error | null, filename: string) => void;
+type MulterFileLike = {
+  originalname?: string;
+  mimetype?: string;
+  fieldname?: string;
+};
 
 function ensureAvatarDir() {
   const dir = join(process.cwd(), 'uploads', 'avatars');
@@ -12,11 +22,28 @@ function ensureAvatarDir() {
 }
 
 export const avatarMulterOptions = {
-  storage: diskStorage({
-    destination: (_req, _file, cb) => {
+  storage: (
+    diskStorage as unknown as (opts: {
+      destination: (
+        req: unknown,
+        file: MulterFileLike,
+        cb: DestinationCallback,
+      ) => void;
+      filename: (
+        req: unknown,
+        file: MulterFileLike,
+        cb: FilenameCallback,
+      ) => void;
+    }) => StorageEngine
+  )({
+    destination: (
+      _req: unknown,
+      _file: MulterFileLike,
+      cb: DestinationCallback,
+    ) => {
       cb(null, ensureAvatarDir());
     },
-    filename: (_req, file, cb) => {
+    filename: (_req: unknown, file: MulterFileLike, cb: FilenameCallback) => {
       const ext = extname(file.originalname || '').toLowerCase() || '.png';
       const safeExt = ['.png', '.jpg', '.jpeg', '.webp'].includes(ext)
         ? ext
@@ -24,10 +51,13 @@ export const avatarMulterOptions = {
       cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${safeExt}`);
     },
   }),
-  fileFilter: (_req: unknown, file: { mimetype?: string }, cb: (error: Error | null, acceptFile: boolean) => void) => {
+  fileFilter: (_req: unknown, file: MulterFileLike, cb: MulterCallback) => {
     const allowed = ['image/png', 'image/jpeg', 'image/webp'];
     if (file.mimetype && allowed.includes(file.mimetype)) return cb(null, true);
-    return cb(new BadRequestException('Arquivo inválido. Envie PNG, JPG/JPEG ou WEBP.'), false);
+    return cb(
+      new BadRequestException('Arquivo inválido. Envie PNG, JPG/JPEG ou WEBP.'),
+      false,
+    );
   },
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 };
@@ -36,12 +66,9 @@ export const avatarMulterOptions = {
 // Isso evita "Unexpected field" quando o cliente envia outros campos de arquivo por engano.
 export const avatarUrlAnyFilesMulterOptions = {
   ...avatarMulterOptions,
-  fileFilter: (
-    req: unknown,
-    file: { mimetype?: string; fieldname?: string },
-    cb: (error: Error | null, acceptFile: boolean) => void,
-  ) => {
-    if (file.fieldname && file.fieldname !== AVATAR_FILE_FIELD) return cb(null, false);
+  fileFilter: (req: unknown, file: MulterFileLike, cb: MulterCallback) => {
+    if (file.fieldname && file.fieldname !== AVATAR_FILE_FIELD)
+      return cb(null, false);
     return avatarMulterOptions.fileFilter(req, file, cb);
   },
 };
