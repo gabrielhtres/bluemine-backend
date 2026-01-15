@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { join } from 'path';
 import { promises as fs } from 'fs';
+import { USER_PUBLIC_ATTRIBUTES } from '../common/constants/user-attributes.constant';
 
 @Injectable()
 export class UserService extends BaseService<User> {
@@ -13,13 +14,7 @@ export class UserService extends BaseService<User> {
     super(userModel);
   }
 
-  private readonly publicAttributes = [
-    'id',
-    'name',
-    'email',
-    'role',
-    'avatarUrl',
-  ] as const;
+  private readonly publicAttributes = USER_PUBLIC_ATTRIBUTES;
 
   async findAll(): Promise<User[]> {
     return this.userModel.findAll({ attributes: [...this.publicAttributes] });

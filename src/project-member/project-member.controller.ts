@@ -11,6 +11,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { CurrentUser } from 'src/auth/decorators/user.decorator';
 
 @ApiBearerAuth()
 @ApiTags('Project Members')
@@ -33,7 +34,15 @@ export class ProjectMemberController {
   })
   @ApiResponse({ status: 400, description: 'Dados inválidos.' })
   @ApiResponse({ status: 403, description: 'Acesso negado.' })
-  create(@Body() data: SyncProjectMemberDto): Promise<ProjectMember[]> {
-    return this.projectMemberService.syncMembers(data);
+  @ApiResponse({
+    status: 404,
+    description: 'Projeto não encontrado.',
+  })
+  create(
+    @Body() data: SyncProjectMemberDto,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole: string,
+  ): Promise<ProjectMember[]> {
+    return this.projectMemberService.syncMembers(data, +userId, userRole);
   }
 }

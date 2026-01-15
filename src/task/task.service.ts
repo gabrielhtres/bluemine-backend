@@ -9,7 +9,11 @@ import { Task } from './task.model';
 import { TaskStatus } from './dto/create-task.dto';
 import { Project, User } from 'src/models';
 import { ProjectMember } from '../project-member/project-member.model';
-import { Op } from 'sequelize';
+import { USER_PUBLIC_ATTRIBUTES } from '../common/constants/user-attributes.constant';
+import {
+  getUserProjectIds,
+  createUserTaskFilter,
+} from '../common/helpers/project.helper';
 
 @Injectable()
 export class TaskService extends BaseService<Task> {
@@ -22,7 +26,6 @@ export class TaskService extends BaseService<Task> {
   }
 
   async findAll(userId?: number, userRole?: string): Promise<Task[]> {
-    // Se for admin, retorna todas as tarefas
     if (userRole === 'admin') {
       return this.taskModel.findAll({
         include: [
@@ -33,41 +36,21 @@ export class TaskService extends BaseService<Task> {
           {
             model: User,
             as: 'assignee',
-            attributes: ['id', 'name', 'email', 'role', 'avatarUrl'],
+            attributes: [...USER_PUBLIC_ATTRIBUTES],
           },
         ],
       });
     }
 
-    // Se for manager ou developer, retorna apenas suas tarefas
     if (userId) {
-      // Busca projetos onde o usuário é manager
-      const managedProjects = await Project.findAll({
-        where: { managerId: userId },
-        attributes: ['id'],
-      });
-      const managedProjectIds = managedProjects.map((p) => p.id);
+      const allProjectIds = await getUserProjectIds(
+        userId,
+        Project,
+        this.projectMemberModel,
+      );
 
-      // Busca projetos onde o usuário é membro
-      const memberProjects = await this.projectMemberModel.findAll({
-        where: { userId },
-        attributes: ['projectId'],
-      });
-      const memberProjectIds = memberProjects.map((m) => m.projectId);
-
-      // Combina todos os IDs de projetos relevantes
-      const allProjectIds = [...managedProjectIds, ...memberProjectIds];
-
-      // Busca tarefas onde:
-      // 1. O usuário é assignee, OU
-      // 2. A tarefa pertence a um projeto onde o usuário é manager ou membro
       return this.taskModel.findAll({
-        where: {
-          [Op.or]: [
-            { assigneeId: userId },
-            { projectId: { [Op.in]: allProjectIds } },
-          ],
-        },
+        where: createUserTaskFilter(userId, allProjectIds),
         include: [
           {
             model: Project,
@@ -76,13 +59,12 @@ export class TaskService extends BaseService<Task> {
           {
             model: User,
             as: 'assignee',
-            attributes: ['id', 'name', 'email', 'role', 'avatarUrl'],
+            attributes: [...USER_PUBLIC_ATTRIBUTES],
           },
         ],
       });
     }
 
-    // Fallback: retorna todas (caso não tenha userId)
     return this.taskModel.findAll({
       include: [
         {
@@ -112,6 +94,69 @@ export class TaskService extends BaseService<Task> {
     });
   }
 
+  async findOne(id: number): Promise<Task> {
+    const task = await this.taskModel.findByPk(id, {
+      include: [
+        {
+          model: Project,
+          attributes: ['id', 'name', 'managerId'],
+        },
+        {
+          model: User,
+          as: 'assignee',
+          attributes: ['id', 'name', 'email', 'role', 'avatarUrl'],
+        },
+      ],
+    });
+
+    if (!task) throw new NotFoundException('Tarefa não encontrada.');
+
+    return task;
+  }
+
+  async checkUserHasAccess(
+    taskId: number,
+    userId: number,
+    userRole?: string,
+  ): Promise<boolean> {
+    if (userRole === 'admin') {
+      return true;
+    }
+
+    const task = await this.taskModel.findByPk(taskId, {
+      include: [
+        {
+          model: Project,
+          attributes: ['id', 'managerId'],
+        },
+      ],
+    });
+
+    if (!task) {
+      return false;
+    }
+
+    // Verifica se o usuário é o assignee da tarefa
+    if (task.assigneeId === userId) {
+      return true;
+    }
+
+    // Verifica se o usuário é o manager do projeto
+    if (task.project.managerId === userId) {
+      return true;
+    }
+
+    // Verifica se o usuário é membro do projeto
+    const projectMember = await this.projectMemberModel.findOne({
+      where: {
+        projectId: task.projectId,
+        userId: userId,
+      },
+    });
+
+    return !!projectMember;
+  }
+
   async updateStatus(
     taskId: number,
     newStatus: TaskStatus,
@@ -128,29 +173,50 @@ export class TaskService extends BaseService<Task> {
 
     if (!task) throw new NotFoundException('Tarefa não encontrada.');
 
-    // VALIDAÇÃO DE PERMISSÃO
-    // 1. Verifica se o usuário é o assignee da tarefa
-    const isAssignee = task.assigneeId === userId;
-
-    // 2. Verifica se o usuário é o manager do projeto ou admin
-    const isManager = task.project.managerId === userId;
-    const isAdmin = userRole === 'admin';
-
-    // 3. Verifica se o usuário é membro do projeto
-    const projectMember = await this.projectMemberModel.findOne({
-      where: {
-        projectId: task.projectId,
-        userId: userId,
-      },
-    });
-    const isMember = !!projectMember;
-
-    if (!isAssignee && !isManager && !isMember && !isAdmin) {
+    const hasAccess = await this.checkUserHasAccess(taskId, userId, userRole);
+    if (!hasAccess) {
       throw new ForbiddenException(
         'Você não tem permissão para alterar esta tarefa.',
       );
     }
 
-    return task.update({ status: newStatus });
+    await task.update({ status: newStatus });
+    return this.findOne(taskId);
+  }
+
+  async update(
+    id: number,
+    data: Partial<Task>,
+    userId?: number,
+    userRole?: string,
+  ): Promise<Task> {
+    const task = await this.findOne(id);
+
+    if (userId !== undefined && userRole !== undefined) {
+      const hasAccess = await this.checkUserHasAccess(id, userId, userRole);
+      if (!hasAccess) {
+        throw new ForbiddenException(
+          'Você não tem permissão para alterar esta tarefa.',
+        );
+      }
+    }
+
+    await task.update(data as unknown as Partial<Task['_attributes']>);
+    return this.findOne(id);
+  }
+
+  async remove(id: number, userId?: number, userRole?: string): Promise<void> {
+    const task = await this.findOne(id);
+
+    if (userId !== undefined && userRole !== undefined) {
+      const hasAccess = await this.checkUserHasAccess(id, userId, userRole);
+      if (!hasAccess) {
+        throw new ForbiddenException(
+          'Você não tem permissão para remover esta tarefa.',
+        );
+      }
+    }
+
+    await task.destroy();
   }
 }

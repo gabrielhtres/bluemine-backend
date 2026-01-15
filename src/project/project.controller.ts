@@ -8,7 +8,10 @@ import {
   Delete,
   Patch,
   UseGuards,
+  ForbiddenException,
+  Req,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { BaseController } from '../base/base.controller';
 import { Project } from './project.model';
 import { ProjectService } from './project.service';
@@ -26,6 +29,7 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { UpdateProjectStatusDto } from './dto/update-project-status.dto';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { extractUserFromRequest } from '../common/helpers/request.helper';
 
 @ApiBearerAuth()
 @ApiTags('Projects')
@@ -117,8 +121,30 @@ export class ProjectController extends BaseController<Project> {
     type: Project,
   })
   @ApiResponse({ status: 404, description: 'Projeto não encontrado.' })
-  findOne(@Param('id') id: string): Promise<Project> {
-    return this.projectService.findOne(+id);
+  @ApiResponse({
+    status: 403,
+    description: 'Você não tem permissão para acessar este projeto.',
+  })
+  async findOne(
+    @Param('id') id: string,
+    @Req() req?: Request,
+  ): Promise<Project> {
+    const { id: userId, role: userRole } = extractUserFromRequest(req);
+
+    const project = await this.projectService.findOne(+id);
+    const hasAccess = await this.projectService.checkUserHasAccess(
+      +id,
+      userId,
+      userRole,
+    );
+
+    if (!hasAccess) {
+      throw new ForbiddenException(
+        'Você não tem permissão para acessar este projeto.',
+      );
+    }
+
+    return project;
   }
 
   @Put(':id')
@@ -130,11 +156,17 @@ export class ProjectController extends BaseController<Project> {
     type: Project,
   })
   @ApiResponse({ status: 404, description: 'Projeto não encontrado.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Você não tem permissão para alterar este projeto.',
+  })
   update(
     @Param('id') id: string,
     @Body() data: UpdateProjectDto,
+    @Req() req?: Request,
   ): Promise<Project> {
-    return this.projectService.update(+id, data);
+    const { id: userId, role: userRole } = extractUserFromRequest(req);
+    return this.projectService.update(+id, data, userId, userRole);
   }
 
   @Delete(':id')

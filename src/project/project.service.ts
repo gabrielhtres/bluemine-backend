@@ -9,6 +9,7 @@ import { Project } from './project.model';
 import { ProjectMember, User } from 'src/models';
 import { Op } from 'sequelize';
 import { ProjectStatus } from './dto/create-project.dto';
+import { USER_PUBLIC_ATTRIBUTES } from '../common/constants/user-attributes.constant';
 
 @Injectable()
 export class ProjectService extends BaseService<Project> {
@@ -21,26 +22,23 @@ export class ProjectService extends BaseService<Project> {
   }
 
   async findAll(userId?: number, userRole?: string): Promise<Project[]> {
-    // Se for admin, retorna todos os projetos
     if (userRole === 'admin') {
       return this.projectModel.findAll({
         include: [
           {
             model: User,
             as: 'developers',
-            attributes: ['id', 'name', 'email', 'role', 'avatarUrl'],
+            attributes: [...USER_PUBLIC_ATTRIBUTES],
             through: { attributes: ['role'] },
           },
         ],
       });
     }
 
-    // Se for manager ou developer, retorna apenas seus projetos
     if (userId) {
       return this.findByUserId(userId);
     }
 
-    // Fallback: retorna todos (caso não tenha userId)
     return this.projectModel.findAll({
       include: [
         {
@@ -93,6 +91,34 @@ export class ProjectService extends BaseService<Project> {
     return project;
   }
 
+  async checkUserHasAccess(
+    projectId: number,
+    userId: number,
+    userRole?: string,
+  ): Promise<boolean> {
+    if (userRole === 'admin') {
+      return true;
+    }
+
+    const project = await this.projectModel.findByPk(projectId);
+    if (!project) {
+      return false;
+    }
+
+    if (project.managerId === userId) {
+      return true;
+    }
+
+    const memberProject = await this.projectMemberModel.findOne({
+      where: {
+        projectId,
+        userId,
+      },
+    });
+
+    return !!memberProject;
+  }
+
   async create(data: Partial<Project>): Promise<Project> {
     const project = await this.projectModel.create(
       data as unknown as Project['_creationAttributes'],
@@ -100,8 +126,23 @@ export class ProjectService extends BaseService<Project> {
     return this.findOne(project.id);
   }
 
-  async update(id: number, data: Partial<Project>): Promise<Project> {
+  async update(
+    id: number,
+    data: Partial<Project>,
+    userId?: number,
+    userRole?: string,
+  ): Promise<Project> {
     const project = await this.findOne(id);
+
+    if (userId !== undefined && userRole !== undefined) {
+      const hasAccess = await this.checkUserHasAccess(id, userId, userRole);
+      if (!hasAccess) {
+        throw new ForbiddenException(
+          'Você não tem permissão para alterar este projeto.',
+        );
+      }
+    }
+
     await project.update(data as unknown as Partial<Project['_attributes']>);
     return this.findOne(id);
   }
@@ -116,8 +157,6 @@ export class ProjectService extends BaseService<Project> {
 
     if (!project) throw new NotFoundException('Projeto não encontrado.');
 
-    // VALIDAÇÃO DE PERMISSÃO
-    // Apenas o manager do projeto ou admin pode alterar o status
     const isManager = project.managerId === userId;
     const isAdmin = userRole === 'admin';
 

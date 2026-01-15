@@ -217,6 +217,24 @@
 				{
 					"name": "/user/:id",
 					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api-url}}/user/1",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"user",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/user/:id",
+					"request": {
 						"method": "PUT",
 						"header": [],
 						"body": {
@@ -316,6 +334,24 @@
 							],
 							"path": [
 								"task"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/task/:id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api-url}}/task/1",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"task",
+								"1"
 							]
 						}
 					},
@@ -458,6 +494,24 @@
 							],
 							"path": [
 								"project"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/project/:id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api-url}}/project/1",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"project",
+								"1"
 							]
 						}
 					},
